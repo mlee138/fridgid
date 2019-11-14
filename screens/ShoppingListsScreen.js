@@ -99,6 +99,26 @@ export default class ShoppingListsScreen extends Component {
 
   }
 
+  discardList = () => {
+    console.log("delete entire list");
+    Alert.alert(
+      'Delete entire list?',
+      'Are you sure you want to remove all items from your shopping list?',
+      [
+        {
+          text: 'Cancel',
+          onPress: () => console.log('Cancel Pressed'),
+          style: 'cancel',
+        },
+        {text: 'Yes', onPress: () => {
+          this.setState({data: []});
+          this.storeList([]);
+          }
+        },
+      ],
+    ); 
+  }
+
   fridgeAlert = () => {
     Alert.alert(
       'Send Checked items to Fridge?',
@@ -115,7 +135,7 @@ export default class ShoppingListsScreen extends Component {
   }
 
   sendToFridge = () => {
-    console.log("OK: send to fridge");
+    console.log("OK: send items to fridge");
   }
 
   render(){
@@ -133,15 +153,25 @@ export default class ShoppingListsScreen extends Component {
           <Text style={styles.divider}/>
           <Button
             type="clear"
+            onPress={ this.discardList }
+            icon={
+              <Icon 
+                name='trash' 
+                type='entypo'
+              />
+            }
+          />
+          <Text style={styles.divider}/>
+          <Button
+            type="clear"
             onPress={ this.fridgeAlert }
             icon={
               <Icon 
-                name='select1' 
-                type='antdesign'
+                name='export' 
+                type='entypo'
                 color='#00aced'
               />
             }
-            iconRight
           />
         </View>
         <FlatList
