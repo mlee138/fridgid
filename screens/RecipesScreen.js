@@ -1,14 +1,19 @@
-import React from 'react';
-import { ExpoConfigView } from '@expo/samples';
+import React, { Component } from 'react';
+import { ScrollView } from 'react-native-gesture-handler';
 
-export default function RecipesScreen() {
-  /**
-   * Go ahead and delete ExpoConfigView and replace it with your content;
-   * we just wanted to give you a quick view of your config.
-   */
-  return <ExpoConfigView />;
+export default class RecipesScreen extends Component {
+  render(){
+    return(
+      <ScrollView>
+        
+      </ScrollView>
+    );
+  }
 }
 
 RecipesScreen.navigationOptions = {
-  title: 'app.json',
+  title: 'Recipes',
+  headerTitleStyle: {
+    flexGrow: 2,
+  }
 };
