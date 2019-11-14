@@ -42,8 +42,17 @@ export default class ShoppingListsScreen extends Component {
       .catch(error => console.log('error!'));
   }
 
-  checkItem = () => {
-    console.log(this.state.click);
+  checkItem = (item) => {
+    var newArray = this.state.data.map(function(obj){
+      var newObj = {};
+      newObj['name'] = obj.name;
+      (obj.name === item ? 
+        newObj['checked'] = !obj.checked : 
+        newObj['checked'] = obj.checked)
+      return newObj;
+    });
+    
+    this.setState({data: newArray});
   }
 
   render(){
@@ -64,7 +73,8 @@ export default class ShoppingListsScreen extends Component {
           renderItem={({ item }) => (
             <CheckBox
               title={item.name}
-              onPress={(title) => console.log(title),this.checkItem}
+              checked={item.checked}
+              onPress={() => this.checkItem(item.name)}
             />
           )}
           keyExtractor={item => item.name}
@@ -98,7 +108,7 @@ const styles = StyleSheet.create({
   },
   textInput: {
     borderRadius: 20,
-    backgroundColor: '#e8e8e8',
+    backgroundColor: '#ececec',
     padding: 3,
     paddingLeft: 15,
     paddingRight: 15,
