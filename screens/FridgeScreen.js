@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
-import { ScrollView, StyleSheet, AsyncStorage } from 'react-native';
+import { Alert, AsyncStorage, Modal, ScrollView, StyleSheet, Text, View, Button, } from 'react-native';
 import { FlatList } from 'react-native-gesture-handler';
-import { ListItem } from 'react-native-elements';
+import { ListItem, Input } from 'react-native-elements';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 export default class FridgeScreen extends Component  {
   constructor(props){
@@ -9,6 +10,9 @@ export default class FridgeScreen extends Component  {
     this.state = {
       data: [],
       update: true,
+      addVisible: false,
+      showPicker: false,
+      date: new Date(),
     }
   }
 
@@ -16,31 +20,63 @@ export default class FridgeScreen extends Component  {
     AsyncStorage.getItem("fridge", (error, result) => {
       this.setState({ data: JSON.parse(result)}, function(){ console.log("fridge loaded!")})
     });
+    var today = new Date();
+    today = today.toDateString();
+    this.setState({ date: today });
+
   }
 
-  updateFridge = () => {
-    AsyncStorage.getItem("fridge", (error, result) => {
-      this.setState({ data: JSON.parse(result)}, function(){ console.log("fridge loaded!")})
+  setAddModalVisible = (visible) => {
+    this.setState({ addVisible: visible });
+  }
+
+  showDatePicker = (visible) => {
+    this.setState({ showPicker: visible })
+  }
+
+  setDate = (event, date) => {
+    date = date || this.state.date;
+
+    this.setState({
+      show: Platform.OS === 'ios' ? true : false,
+      date,
     });
-    AsyncStorage.setItem('updateFridge', 'false');
   }
 
 
-  render(){
-    if(this.state.update){
-      AsyncStorage.getItem("fridge", (error, result) => {
-        var stateObj = {
-          data: JSON.parse(result),
-          update: false
-        }
-        this.setState(stateObj);
-      });
-    } else {
-      console.log("it has updated");
-    }
-    
+  render(){    
     return (
       <ScrollView style={styles.container}>
+        <View>
+          <Button
+            title="Add Item"
+            onPress={() => {
+              this.setAddModalVisible(!this.state.addVisible)
+            }}/>
+        </View>
+        <Modal
+          animationType="slide"
+          transparent={false}
+          visible={this.state.addVisible}
+          onRequestClose={() => {
+            Alert.alert('Modal has been closed.');
+          }}>
+          <Text>Add Fridge Item</Text>
+          <Input
+            placeholder="Item name"
+            label="Name"/>
+          <Text>{this.state.date}</Text>
+          <Button 
+            onPress={() => this.showDatePicker(!this.state.showPicker)} title="Show date picker!" />
+          <Button
+            title="back"
+            onPress={() => this.setAddModalVisible(!this.state.addVisible)}
+            />
+          { this.state.showPicker && <RNDateTimePicker value={this.state.date}
+                    display="default"
+                    onChange={this.setDate} />
+        }
+        </Modal>
         <FlatList
           data={ this.state.data }
           renderItem={({ item }) => (
