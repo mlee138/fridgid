@@ -18,25 +18,26 @@ export default class ShoppingListsScreen extends Component {
     super(props);
     this.state = {
       data: [],
-      text: ''
+      text: '',
     };
   }
 
   componentDidMount = () => {
     AsyncStorage.getItem('list', (error,result) => {
-      this.setState({ data: this.state.data.concat(JSON.parse(result))}, function(){console.log('data loaded!')})
+      this.setState({ data: this.state.data.concat(JSON.parse(result))}, function(){console.log('list loaded!')})
     });
   }
 
   storeList = (newList) => {
     AsyncStorage.setItem('list', JSON.stringify(newList))
-    .then(json => console.log('data saved!'))
-    .catch(error => console.log('error saving!'));
+    .then(json => console.log('list saved!'))
+    .catch(error => console.log('error saving list!'));
   }
 
-  handleAdd = () => {
-    if(!this.checkDuplicate()){
-      this.addItem();
+  handleAdd = (e) => {
+    var input = e.nativeEvent.text;
+    if(!this.checkDuplicate(input)){
+      this.addItem(input);
     } else{
         Alert.alert(
           'No Duplicates Allowed',
@@ -51,21 +52,22 @@ export default class ShoppingListsScreen extends Component {
           ],
         );  
     }
+    this.setState({ text: '' })
   }
 
-  checkDuplicate = () => {
+  checkDuplicate = (input) => {
     var oldData = this.state.data;
     for(i=0; i<oldData.length; i++){
-      if(oldData[i].name === this.state.text){
+      if(oldData[i].name === input){
         return true;
       }
     }
     return false;
   }
 
-  addItem = () => {
+  addItem = (input) => {
     var newElement = {
-      name: this.state.text,
+      name: input,
       checked: false,
     }
     var newData = [...this.state.data, newElement];
@@ -86,17 +88,16 @@ export default class ShoppingListsScreen extends Component {
     this.setState({data: newArray});
   }
 
-  deleteItem = (item) => {
+  deleteItem = (itemName) => {
     const newData = this.state.data;
     for(i = 0; i < newData.length; i++){
-      if(newData[i].name === item){
+      if(newData[i].name === itemName){
         newData.splice(i, 1);
-        console.log(newData);
         this.storeList(newData);
-        this.setState({data: newData});
+        this.setState({data: newData}); 
       }
     }
-
+    if(newData.length === 0){ this.setState({data: []}); }
   }
 
   discardList = () => {
@@ -136,6 +137,25 @@ export default class ShoppingListsScreen extends Component {
 
   sendToFridge = () => {
     console.log("OK: send items to fridge");
+    var date = new Date();
+    dateStr = date.toDateString();
+    var fridgeArray = [];
+    this.state.data.forEach(element => {
+      if(element.checked){
+        var newObj = {
+          name: element.name,
+          date: dateStr,
+        }
+        fridgeArray.push(newObj);
+        this.deleteItem(element.name);
+      }
+    });
+
+    AsyncStorage.getItem('fridge', (error,result) => {
+      var newFridge = JSON.parse(result).concat(fridgeArray);
+      AsyncStorage.setItem('fridge', JSON.stringify(newFridge));
+      AsyncStorage.setItem('updateFridge', 'true');
+    });
   }
 
   render(){
@@ -143,12 +163,12 @@ export default class ShoppingListsScreen extends Component {
       <ScrollView style={styles.container}>
         <View style={styles.inputs}>
           <TextInput
-            value={this.state.text}
             maxLength={20}
-            style={styles.textInput} 
-            onChangeText = {(value) => this.setState({text: value})}
-            onSubmitEditing = {this.handleAdd}
-            onFocus = {() => this.setState({text: ''})}
+            style={ styles.textInput }
+            value = { this.state.text }
+            onChange = {value => this.setState({ text: value })}
+            onSubmitEditing = {e => this.handleAdd(e)}
+            blurOnSubmit = {false}
             placeholder = 'Add item'/>
           <Text style={styles.divider}/>
           <Button
