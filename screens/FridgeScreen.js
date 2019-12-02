@@ -2,17 +2,20 @@ import React, { Component } from 'react';
 import { Alert, AsyncStorage, Modal, ScrollView, StyleSheet, Text, View, Button, } from 'react-native';
 import { FlatList } from 'react-native-gesture-handler';
 import { ListItem, Input } from 'react-native-elements';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import DatePicker from 'react-native-datepicker'
 
 export default class FridgeScreen extends Component  {
   constructor(props){
     super(props);
+    this.today;
+
     this.state = {
       data: [],
       update: true,
       addVisible: false,
       showPicker: false,
-      date: new Date(),
+      item: '',
+      date:"05-15-2018",
     }
   }
 
@@ -20,29 +23,50 @@ export default class FridgeScreen extends Component  {
     AsyncStorage.getItem("fridge", (error, result) => {
       this.setState({ data: JSON.parse(result)}, function(){ console.log("fridge loaded!")})
     });
-    var today = new Date();
-    today = today.toDateString();
-    this.setState({ date: today });
 
+    this.convertDate();
   }
 
-  setAddModalVisible = (visible) => {
+  convertDate = () => {
+    this.today = new Date();
+    this.today = this.today.toISOString().substr(0,10);
+    var res = this.today.split("-");
+    var year = res[0];
+    res.shift();
+    res.push(year);
+    str1 = res.toString()
+            .replace(new RegExp(",", "g"), '-');
+    console.log(str1);
+    this.today = str1;
+    this.setState({ date: str1 });
+  }
+
+  storeFridge = (newFridge) => {
+    AsyncStorage.setItem('fridge', JSON.stringify(newFridge))
+    .then(json => console.log('fridge saved!'))
+    .catch(error => console.log('error saving fridge!'));
+  }
+
+  addFridgeItem = () => {
+    if(this.state.item){
+
+    } else {
+      var newElement = {
+        name: this.state.item,
+        date: this.state.date,
+      }
+      var newData = [...this.state.data, newElement];
+      this.setState({ data: newData});
+      this.storeFridge(newData);
+
+      this.setModalVisible(!this.state.addVisible);
+    }
+    
+  }
+
+  setModalVisible = (visible) => {
     this.setState({ addVisible: visible });
   }
-
-  showDatePicker = (visible) => {
-    this.setState({ showPicker: visible })
-  }
-
-  setDate = (event, date) => {
-    date = date || this.state.date;
-
-    this.setState({
-      show: Platform.OS === 'ios' ? true : false,
-      date,
-    });
-  }
-
 
   render(){    
     return (
@@ -51,7 +75,7 @@ export default class FridgeScreen extends Component  {
           <Button
             title="Add Item"
             onPress={() => {
-              this.setAddModalVisible(!this.state.addVisible)
+              this.setModalVisible(!this.state.addVisible)
             }}/>
         </View>
         <Modal
@@ -59,23 +83,49 @@ export default class FridgeScreen extends Component  {
           transparent={false}
           visible={this.state.addVisible}
           onRequestClose={() => {
-            Alert.alert('Modal has been closed.');
+            this.setModalVisible(!this.state.addVisible)
           }}>
           <Text>Add Fridge Item</Text>
-          <Input
-            placeholder="Item name"
-            label="Name"/>
-          <Text>{this.state.date}</Text>
-          <Button 
-            onPress={() => this.showDatePicker(!this.state.showPicker)} title="Show date picker!" />
-          <Button
-            title="back"
-            onPress={() => this.setAddModalVisible(!this.state.addVisible)}
+          <View style={styles.datepicker}>
+            <Input
+              placeholder="Item name"
+              label="Name"
+              value={this.state.item}
+              onChangeText= { text => this.setState({ item: text})}/>
+            <DatePicker
+              style={{width: 200}}
+              date={this.state.date} //initial date from state
+              mode="date" //The enum of date, datetime and time
+              placeholder="select date"
+              format="MM-DD-YYYY"
+              minDate="01-01-2016"
+              maxDate={this.today}
+              confirmBtnText="Confirm"
+              cancelBtnText="Cancel"
+              customStyles={{
+                dateIcon: {
+                  position: 'absolute',
+                  left: 0,
+                  top: 4,
+                  marginLeft: 0
+                },
+                dateInput: {
+                  marginLeft: 36
+                }
+              }}
+              onDateChange={(date) => {this.setState({date: date})}}
             />
-          { this.state.showPicker && <RNDateTimePicker value={this.state.date}
-                    display="default"
-                    onChange={this.setDate} />
-        }
+              <View style={styles.modalBtns}>
+                <Button
+                title="cancel"
+                onPress={() => this.setModalVisible(!this.state.addVisible)}
+                />
+                <Button
+                title="confirm"
+                onPress={() => this.addFridgeItem}
+                />
+              </View>
+            </View>            
         </Modal>
         <FlatList
           data={ this.state.data }
@@ -105,4 +155,14 @@ const styles = StyleSheet.create({
     paddingTop: 15,
     backgroundColor: '#fff',
   },
+  datepicker: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent:'space-evenly',
+    marginTop: 50,
+    padding:16
+ },
+ modalBtns: {
+    flexDirection: 'row',
+ }, 
 });

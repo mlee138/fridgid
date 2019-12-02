@@ -166,7 +166,7 @@ export default class ShoppingListsScreen extends Component {
             maxLength={20}
             style={ styles.textInput }
             value = { this.state.text }
-            onChange = {value => this.setState({ text: value })}
+            onChangeText = {value => this.setState({ text: value })}
             onSubmitEditing = {e => this.handleAdd(e)}
             blurOnSubmit = {false}
             placeholder = 'Add item'/>
