@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { ScrollView, FlatList } from 'react-native-gesture-handler';
-import { AsyncStorage, Modal, View, SectionList, SafeAreaView, StyleSheet } from 'react-native';
+import { Alert, AsyncStorage, Modal, View, SectionList, SafeAreaView, StyleSheet } from 'react-native';
 import { Button, Card, Input, ListItem, Text } from 'react-native-elements';
 
 export default class RecipesScreen extends Component {
@@ -9,19 +9,15 @@ export default class RecipesScreen extends Component {
     this.state = {
       data: [
         {
-          title: 'Chicken Cutlet',
-          ingrediants: ['chicken breasts', 'bread-crumbs', 'flour', 'eggs'],
-          steps: ['first', 'second'],
-        },
-
-        {
-          title: 'PB&J',
-          ingrediants: ['bread', 'jam', 'peanut butter'],
-          steps: ['first', 'second'],
-        },
+          title: "Chicken Cutlets",
+          ingrediants: ["chicken"],
+          steps: ['preheat over', 'done'],
+        }
       ],
       editVisible: false,
       recipeName: '',
+      newIngrediants: '',
+      newDirections: '',
       viewRecipe: false,
       recipeIndex: 0,
     }
@@ -31,13 +27,13 @@ export default class RecipesScreen extends Component {
     try {
       const value = await AsyncStorage.getItem('recipes');
       if(value !== null){
-        this.setState({ data: this.state.data.concat(JSON.parse(value))});
+        this.setState({ data: JSON.parse(value)});
       }
     } catch (error) {
       console.log("Error loading RECIPES from storage");
       console.log(error);
     }
-  }
+  } 
 
   storeRecipes = async (newRecipes) => {
     try {
@@ -56,10 +52,47 @@ export default class RecipesScreen extends Component {
     this.setState({ recipeIndex: index});
   }
 
+  noDuplicates = () => {
+    for(i=0; i<this.state.data.length; i++){
+      if(this.state.data[i].name == this.state.recipeName){
+        return false;
+      }
+    }
+    return true;
+  }
+
+  handleRecipeSubmit = () => {
+    if(this.state.recipeName && this.noDuplicates()){
+      var ingrediants = this.state.newIngrediants.split(",");
+      var directions = this.state.newDirections.split('/');
+
+      var newElement = {
+        title: this.state.recipeName,
+        ingrediants: ingrediants,
+        steps: directions,
+      }
+
+      var newData = [...this.state.data, newElement];
+      this.setState({ data: newData});
+      this.storeRecipes(newData);
+
+      this.showEditModal(!this.state.editVisible);
+    } else {
+      Alert.alert(
+        'User Error',
+        'The Recipe name is either empty or is a duplicate',
+        [ 
+          {text: 'OK', onPress: () => console.log('OK Pressed')},
+        ],
+      );
+    }
+  }
+
+  deleteRecipe = () => {
+    
+  }
+
   render(){
-    const DATA =[
-      
-    ]
     return(
       <ScrollView>
         <Button
@@ -87,14 +120,33 @@ export default class RecipesScreen extends Component {
           onRequestClose={() => {
             this.showEditModal(!this.state.editVisible)
           }}>
-          <Text>Create Recipe</Text>
           <View>
             <Input
               placeholder="Ex: Chicken Cutlets"
               label="Recipe Name"
               value={this.state.recipeName}
               onChangeText= { text => this.setState({ recipeName: text})}/>
-              
+            <Input
+              placeholder="separate items with commas (Ex: chicken breast, eggs)"
+              label="Ingrediants"
+              value={this.state.newIngrediants}
+              onChangeText= {text => this.setState({ newIngrediants: text})}/>
+            <Input 
+              placeholder="separate steps with /"
+              label="Directions"
+              value={this.state.newDirections}
+              onChangeText={text => this.setState({ newDirections: text })}/>     
+            
+            <View>
+                <Button
+                title="cancel"
+                onPress={() => this.showEditModal(!this.state.editVisible)}
+                />
+                <Button
+                title="confirm"
+                onPress={ this.handleRecipeSubmit}
+                />
+              </View>
           </View>            
         </Modal>
 
@@ -106,6 +158,12 @@ export default class RecipesScreen extends Component {
             this.viewRecipe(!this.state.viewRecipe, 0)
           }}>
           <Text h3>{this.state.data[this.state.recipeIndex].title}</Text>
+          <Button
+            title="Edit"
+            onPress={() => console.log(this.state.recipeIndex)}/>
+          <Button
+            title="Delete"
+            onPress={() => this.deleteRecipe}/>
           <Card title="Ingrediants">
             <FlatList
               data={this.state.data[this.state.recipeIndex].ingrediants}
