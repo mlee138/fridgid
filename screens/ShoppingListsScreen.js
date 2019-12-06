@@ -22,16 +22,24 @@ export default class ShoppingListsScreen extends Component {
     };
   }
 
-  componentDidMount = () => {
-    AsyncStorage.getItem('list', (error,result) => {
-      this.setState({ data: this.state.data.concat(JSON.parse(result))}, function(){console.log('list loaded!')})
-    });
+  componentDidMount = async () => {
+    try {
+      const value = await AsyncStorage.getItem('list');
+      if(value !== null){
+        this.setState({data: JSON.parse(value)});
+      }
+    } catch (error){
+      console.log("Error loading LIST from memory");
+      console.log(error);
+    }
   }
 
-  storeList = (newList) => {
-    AsyncStorage.setItem('list', JSON.stringify(newList))
-    .then(json => console.log('list saved!'))
-    .catch(error => console.log('error saving list!'));
+  storeList = async (newList) => {
+    try {
+      await AsyncStorage.setItem('list', JSON.stringify(newList));
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   handleAdd = (e) => {

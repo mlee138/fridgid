@@ -20,10 +20,16 @@ export default class FridgeScreen extends Component  {
     }
   }
 
-  componentDidMount() {
-    AsyncStorage.getItem("fridge", (error, result) => {
-      this.setState({ data: JSON.parse(result)}, function(){ console.log("fridge loaded!")})
-    });
+  componentDidMount = async () => {
+    try {
+      const value = await AsyncStorage.getItem('fridge');
+      if(value !== null){
+        this.setState({data: JSON.parse(value)});
+      }
+    } catch (error){
+      console.log("Error loading FRIDGE from memory");
+      console.log(error);
+    }
 
     this.convertDate();
   }
@@ -42,10 +48,12 @@ export default class FridgeScreen extends Component  {
     this.setState({ date: str1 });
   }
 
-  storeFridge = (newFridge) => {
-    AsyncStorage.setItem('fridge', JSON.stringify(newFridge))
-    .then(json => console.log('fridge saved!'))
-    .catch(error => console.log('error saving fridge!'));
+  storeFridge = async (newFridge) => {
+    try {
+      await AsyncStorage.setItem('fridge', JSON.stringify(newFridge));
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   handleOpenModal = (modalType, itemName, itemDate) => {

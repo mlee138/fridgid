@@ -22,10 +22,11 @@ export default class RecipesScreen extends Component {
     try {
       const value = await AsyncStorage.getItem('recipes');
       if(value !== null){
-        this.setState({ data: this.state.data.concat(JSON.parse(result))});
+        this.setState({ data: this.state.data.concat(JSON.parse(value))});
       }
     } catch (error) {
-      console.log("Error loading inital recipes from storage");
+      console.log("Error loading RECIPES from storage");
+      console.log(error);
     }
   }
 
