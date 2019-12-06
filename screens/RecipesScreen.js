@@ -11,7 +11,12 @@ export default class RecipesScreen extends Component {
         {
           title: 'Chicken Cutlet',
           ingrediants: ['chicken breasts', 'bread-crumbs', 'flour', 'eggs'],
-        }
+        },
+
+        {
+          title: 'PB&J',
+          ingrediants: ['bread', 'jam', 'peanut butter'],
+        },
       ],
       modalVisible: false,
       recipeName: '',
@@ -30,6 +35,14 @@ export default class RecipesScreen extends Component {
     }
   }
 
+  storeRecipes = async (newRecipes) => {
+    try {
+      await AsyncStorage.setItem('recipes', JSON.stringify(newRecipes));
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
   setModalVisible = (visible) => {
     this.setState({ modalVisible: visible });
   }
@@ -44,7 +57,6 @@ export default class RecipesScreen extends Component {
           data={ this.state.data }
           renderItem={({ item }) => (
             <Card title={ item.title }>
-              
             </Card>
           )}
           keyExtractor={item => item.title}
