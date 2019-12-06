@@ -167,6 +167,19 @@ export default class FridgeScreen extends Component  {
             title="Add Item"
             onPress={() => this.handleOpenModal('Add')}/>
         </View>
+        <FlatList
+          data={ this.state.data }
+          renderItem={({ item }) => (
+            <ListItem
+              title={item.name}
+              bottomDivider
+              onPress={() => this.handleOpenModal('Update', item.name, item.date) }
+              onLongPress={() => this.deleteItem(item.name)}
+            />
+          )}
+          keyExtractor={item => item.name}
+        />
+
         <Modal
           animationType="slide"
           transparent={false}
@@ -221,18 +234,6 @@ export default class FridgeScreen extends Component  {
               </View>
             </View>            
         </Modal>
-        <FlatList
-          data={ this.state.data }
-          renderItem={({ item }) => (
-            <ListItem
-              title={item.name}
-              bottomDivider
-              onPress={() => this.handleOpenModal('Update', item.name, item.date) }
-              onLongPress={() => this.deleteItem(item.name)}
-            />
-          )}
-          keyExtractor={item => item.name}
-        />
       </ScrollView>
     );
   }
