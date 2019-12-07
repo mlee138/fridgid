@@ -16,6 +16,7 @@ export default class RecipesScreen extends Component {
       ],
       editVisible: false,
       recipeName: '',
+      oldRecipeName: '',
       newIngrediants: '',
       newDirections: '',
       viewRecipe: false,
@@ -43,7 +44,25 @@ export default class RecipesScreen extends Component {
     }
   }
 
-  showEditModal = (visible) => {
+  toCustomString = () => {
+
+  }
+
+  showEditModal = (visible, updateIndex) => {
+    if(updateIndex === -1){
+      this.setState({ recipeName: '' });
+      this.setState({ newIngrediants: '' });
+      this.setState({ newDirections: '' });
+    } else {
+      var currentRecipe = this.state.data[updateIndex];
+      var ingrediants = currentRecipe.ingrediants.join(",");
+      var steps = currentRecipe.steps.join("/");
+      var name = currentRecipe.title;
+      this.setState({ recipeName: name });
+      this.setState({ oldRecipeName: name });
+      this.setState({ newIngrediants: ingrediants });
+      this.setState({ newDirections: steps });
+    }
     this.setState({ editVisible: visible });
   }
 
@@ -62,6 +81,25 @@ export default class RecipesScreen extends Component {
   }
 
   handleRecipeSubmit = () => {
+    if(this.state.recipeName){
+      (this.state.modalType == 'new' ?
+      this.addRecipe() :
+      this.editRecipe()
+      );
+      this.showEditModal(!this.state.editVisible, -1);
+    } else{
+      Alert.alert(
+        'Error: Empty recipe name',
+        'No recipe name was found',
+        [ 
+          {text: 'OK', onPress: () => console.log('OK Pressed')},
+        ],
+      );
+    }
+    
+  }
+
+  addRecipe = () => {
     if(this.state.recipeName && this.noDuplicates()){
       var ingrediants = this.state.newIngrediants.split(",");
       var directions = this.state.newDirections.split('/');
@@ -76,11 +114,10 @@ export default class RecipesScreen extends Component {
       this.setState({ data: newData});
       this.storeRecipes(newData);
 
-      this.showEditModal(!this.state.editVisible);
     } else {
       Alert.alert(
-        'User Error',
-        'The Recipe name is either empty or is a duplicate',
+        'No Duplicates Allowed',
+        'The recipe name duplicate',
         [ 
           {text: 'OK', onPress: () => console.log('OK Pressed')},
         ],
@@ -88,8 +125,33 @@ export default class RecipesScreen extends Component {
     }
   }
 
+  editRecipe = () => {
+    var newObj = {
+      title: this.state.recipeName,
+      ingrediants: this.state.newIngrediants.split(','),
+      steps: this.state.newDirections.split('/'),
+    };
+
+    var oldName = this.state.oldRecipeName;
+
+    var newArray = this.state.data.map(function(obj){
+      if(obj.title === oldName){
+        return newObj;
+      } else { return obj; }
+    });
+    this.storeRecipes(newArray);
+    this.setState({ data: newArray });
+  }
+
   deleteRecipe = () => {
-    
+    const newData = this.state.data;
+    newData.splice(this.state.recipeIndex, 1);
+    this.storeRecipes(newData);
+    this.setState({ data: newData });
+
+    if(newData.length === 0){ this.setState({ data: [] }); }
+    this.setState({ recipeIndex: 0});
+    this.setState({ viewRecipe: false });
   }
 
   render(){
@@ -97,7 +159,10 @@ export default class RecipesScreen extends Component {
       <ScrollView>
         <Button
           title="New Recipe"
-          onPress={() => this.showEditModal(!this.state.editVisible)}/>
+          onPress={() => (
+            this.setState({ modalType: "new"}),
+            this.showEditModal(!this.state.editVisible, -1)
+          )}/>
         <SafeAreaView>
         <FlatList
         data={this.state.data}
@@ -118,7 +183,7 @@ export default class RecipesScreen extends Component {
           transparent={false}
           visible={this.state.editVisible}
           onRequestClose={() => {
-            this.showEditModal(!this.state.editVisible)
+            this.showEditModal(!this.state.editVisible, -1)
           }}>
           <View>
             <Input
@@ -140,7 +205,7 @@ export default class RecipesScreen extends Component {
             <View>
                 <Button
                 title="cancel"
-                onPress={() => this.showEditModal(!this.state.editVisible)}
+                onPress={() => this.showEditModal(!this.state.editVisible, -1)}
                 />
                 <Button
                 title="confirm"
@@ -160,10 +225,13 @@ export default class RecipesScreen extends Component {
           <Text h3>{this.state.data[this.state.recipeIndex].title}</Text>
           <Button
             title="Edit"
-            onPress={() => console.log(this.state.recipeIndex)}/>
+            onPress={() => (
+              this.setState({ modalType: 'edit' }),
+              this.showEditModal(!this.state.showEditModal, this.state.recipeIndex)
+            )}/>
           <Button
             title="Delete"
-            onPress={() => this.deleteRecipe}/>
+            onPress={() => this.deleteRecipe()}/>
           <Card title="Ingrediants">
             <FlatList
               data={this.state.data[this.state.recipeIndex].ingrediants}
