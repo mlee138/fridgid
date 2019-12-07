@@ -17,6 +17,8 @@ export default class RecipesScreen extends Component {
       editVisible: false,
       recipeName: '',
       oldRecipeName: '',
+      currIngrediants: [],
+      currSteps: [],
       newIngrediants: '',
       newDirections: '',
       viewRecipe: false,
@@ -39,13 +41,10 @@ export default class RecipesScreen extends Component {
   storeRecipes = async (newRecipes) => {
     try {
       await AsyncStorage.setItem('recipes', JSON.stringify(newRecipes));
+
     } catch (error) {
       console.log(error);
     }
-  }
-
-  toCustomString = () => {
-
   }
 
   showEditModal = (visible, updateIndex) => {
@@ -69,6 +68,9 @@ export default class RecipesScreen extends Component {
   viewRecipe = (visible, index) => {
     this.setState({viewRecipe: visible});
     this.setState({ recipeIndex: index});
+    this.setState({ recipeName: this.state.data[index].title });
+    this.setState({ currIngrediants: this.state.data[index].ingrediants });
+    this.setState({ currSteps: this.state.data[index].steps });
   }
 
   noDuplicates = () => {
@@ -149,7 +151,6 @@ export default class RecipesScreen extends Component {
     this.storeRecipes(newData);
     this.setState({ data: newData });
 
-    if(newData.length === 0){ this.setState({ data: [] }); }
     this.setState({ recipeIndex: 0});
     this.setState({ viewRecipe: false });
   }
@@ -222,11 +223,17 @@ export default class RecipesScreen extends Component {
           onRequestClose={() => {
             this.viewRecipe(!this.state.viewRecipe, 0)
           }}>
-          <Text h3>{this.state.data[this.state.recipeIndex].title}</Text>
+          <Text h3>{this.state.recipeName}</Text>
+          <Button
+            title="back"
+            onPress={() => {
+              this.setState({ viewRecipe: false });
+            }}/>
           <Button
             title="Edit"
             onPress={() => (
               this.setState({ modalType: 'edit' }),
+              this.setState({ viewRecipe: false }),
               this.showEditModal(!this.state.showEditModal, this.state.recipeIndex)
             )}/>
           <Button
@@ -234,7 +241,7 @@ export default class RecipesScreen extends Component {
             onPress={() => this.deleteRecipe()}/>
           <Card title="Ingrediants">
             <FlatList
-              data={this.state.data[this.state.recipeIndex].ingrediants}
+              data={this.state.currIngrediants}
               keyExtractor={(item, index) => item + index}
               renderItem={({ item }) => (
                 <ListItem 
@@ -246,7 +253,7 @@ export default class RecipesScreen extends Component {
         
           <Card title="Directions">
             <FlatList
-              data={this.state.data[this.state.recipeIndex].steps}
+              data={this.state.currSteps}
               keyExtractor={(item, index) => item + index}
               renderItem={({ item }) => (
                 <ListItem 
